@@ -1,0 +1,216 @@
+{
+  "entities": {
+    "ProfessorProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProfessorProfile",
+      "type": "object",
+      "description": "Represents a professor's profile within the LabLog system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the professor profile."
+        },
+        "institutionalEmail": {
+          "type": "string",
+          "description": "The professor's institutional email address (@neu.edu.ph).",
+          "format": "email"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "The professor's full name."
+        },
+        "isBlocked": {
+          "type": "boolean",
+          "description": "Indicates whether the professor is blocked from accessing the labs."
+        }
+      },
+      "required": [
+        "id",
+        "institutionalEmail",
+        "fullName",
+        "isBlocked"
+      ]
+    },
+    "LabRoom": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LabRoom",
+      "type": "object",
+      "description": "Represents a laboratory room within the NEU system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the lab room."
+        },
+        "roomNumber": {
+          "type": "string",
+          "description": "The room number of the laboratory."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the laboratory room and its purpose."
+        }
+      },
+      "required": [
+        "id",
+        "roomNumber"
+      ]
+    },
+    "UsageLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UsageLog",
+      "type": "object",
+      "description": "Represents a log of a professor's usage of a laboratory room.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the usage log entry."
+        },
+        "professorId": {
+          "type": "string",
+          "description": "Reference to ProfessorProfile. (Relationship: ProfessorProfile 1:N UsageLog)"
+        },
+        "roomId": {
+          "type": "string",
+          "description": "Reference to LabRoom. (Relationship: LabRoom 1:N UsageLog)"
+        },
+        "loginTimestamp": {
+          "type": "string",
+          "description": "The timestamp when the professor logged into the room.",
+          "format": "date-time"
+        },
+        "logoutTimestamp": {
+          "type": "string",
+          "description": "The timestamp when the professor logged out of the room. Null if still active.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the session in minutes."
+        }
+      },
+      "required": [
+        "id",
+        "professorId",
+        "roomId",
+        "loginTimestamp"
+      ]
+    },
+    "AdminProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminProfile",
+      "type": "object",
+      "description": "Represents an administrator's profile within the LabLog system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the admin profile."
+        },
+        "institutionalEmail": {
+          "type": "string",
+          "description": "The admin's institutional email address (@neu.edu.ph).",
+          "format": "email"
+        },
+        "fullName": {
+          "type": "string",
+          "description": "The admin's full name."
+        }
+      },
+      "required": [
+        "id",
+        "institutionalEmail",
+        "fullName"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/professors/{professorId}",
+        "definition": {
+          "entityName": "ProfessorProfile",
+          "schema": {
+            "$ref": "#/backend/entities/ProfessorProfile"
+          },
+          "description": "Stores professor profiles, keyed by their unique ID. This collection is used to store professor details such as institutional email and full name.",
+          "params": [
+            {
+              "name": "professorId",
+              "description": "The unique identifier of the professor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/lab_rooms/{roomId}",
+        "definition": {
+          "entityName": "LabRoom",
+          "schema": {
+            "$ref": "#/backend/entities/LabRoom"
+          },
+          "description": "Stores lab room information, keyed by a unique ID. This collection includes the room number and a description of the lab.",
+          "params": [
+            {
+              "name": "roomId",
+              "description": "The unique identifier of the lab room."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/usage_logs/{usageLogId}",
+        "definition": {
+          "entityName": "UsageLog",
+          "schema": {
+            "$ref": "#/backend/entities/UsageLog"
+          },
+          "description": "Stores usage logs for each professor and lab room combination.  Includes denormalized 'professorId' for authorization independence.",
+          "params": [
+            {
+              "name": "usageLogId",
+              "description": "The unique identifier of the usage log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "AdminProfile",
+          "schema": {
+            "$ref": "#/backend/entities/AdminProfile"
+          },
+          "description": "Stores admin profiles, keyed by their unique ID.  This collection is used to store administrator details such as institutional email and full name.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of the admin."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminProfile"
+          },
+          "description": "Documents in this collection grant admin privileges. Existence of a document keyed by the user ID grants admin role.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of the admin, which matches their Firebase Auth UID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, clarity, and scalability for the LabLog application. It segregates data based on access needs and uses denormalization to avoid complex security rules with `get()` calls. The structure supports QAPs by segregating collections based on access control needs and leveraging path-based ownership. \n\n1.  **Authorization Independence:** The `UsageLog` collection denormalizes the `professorId` to ensure that security rules can validate ownership without needing to perform a `get()` on the `ProfessorProfile`. This allows for atomic operations (transactions/batches). The admin role is verified by existence in `/roles_admin/{uid}`.\n2.  **Clarity of Intent:** The structure clearly separates professor profiles, lab rooms, usage logs, and admin roles into distinct collections, making the access control logic explicit. Path-based ownership (`/users/{userId}/...`) clearly defines the relationship between users and their data.\n3.  **DBAC (No Custom Claims):** Admin roles are stored in the database (`roles_admin/{uid}`), and authorization relies solely on `request.auth.uid`. Professors are only allowed to view their own usage logs based on their UID matching the `professorId` in the `UsageLog` document.\n4.  **QAPs (Rules are not Filters):**  The segregation of professor profiles, lab rooms, usage logs, and admin roles into separate collections enables secure list operations. Admins can list all documents in the `UsageLog` collection, while professors can only list logs where their `professorId` matches their UID.\n5.  **Invariants:** The structure supports the integrity of ownership by storing the `professorId` in the `UsageLog` document. Timestamps are explicitly stored in the `UsageLog` document, and the data structure supports the integrity of the professor ID and the lab room ID."
+  }
+}

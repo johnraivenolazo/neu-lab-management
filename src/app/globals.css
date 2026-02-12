@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%; /* Pure Black */
+    --foreground: 240 5% 96%; /* Zinc 50 equivalent */
+    --card: 240 10% 3.9%; /* Zinc 950 */
+    --card-foreground: 240 5% 96%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 240 5% 96%;
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 4% 16%; /* Zinc 800 */
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%; /* Zinc 400 */
+    --accent: 240 4% 16%;
+    --accent-foreground: 240 5% 96%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 240 5% 96%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 240 5% 96%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline text-white;
+  }
+}
