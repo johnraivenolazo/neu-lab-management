@@ -76,8 +76,9 @@ export default function LoginPage() {
 
         <div className="relative z-10 space-y-12">
           <div className="space-y-4">
+            <h1 className="text-4xl font-bold tracking-tighter text-white">NEU Lab Management</h1>
             <p className="text-xl text-zinc-400 max-w-sm leading-relaxed font-light">
-              Secure authentication for institutional facility management.
+              Streamlined tracking for laboratory usage and attendance.
             </p>
           </div>
 
@@ -97,10 +98,10 @@ export default function LoginPage() {
 
       <div className="flex items-center justify-center p-6 sm:p-12">
         <Card className="w-full max-w-md border-zinc-900 bg-zinc-950/40 backdrop-blur-xl shadow-2xl">
-          <CardHeader className="space-y-2 text-center sm:text-left">
+          <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-zinc-100">Welcome</CardTitle>
             <CardDescription className="text-zinc-500">
-              Please authenticate with your institutional credentials.
+              Sign in to manage laboratory records.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-4">
@@ -119,20 +120,15 @@ export default function LoginPage() {
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                 </svg>
               )}
-              {loading ? 'Authenticating...' : 'Sign in with Google Workspace'}
+              {loading ? 'Authenticating...' : 'Sign in with Google'}
             </Button>
 
-            <div className="bg-blue-900/20 border border-blue-900/50 rounded-lg p-3">
-              <p className="text-blue-200 text-xs text-center leading-relaxed">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-3">
+              <p className="text-zinc-400 text-xs text-center leading-relaxed">
                 Only <strong>@neu.edu.ph</strong> accounts are authorized.
               </p>
             </div>
           </CardContent>
-          <CardFooter className="pt-2">
-            <p className="text-center w-full text-[10px] text-zinc-700 leading-relaxed uppercase tracking-[0.2em] font-bold">
-              Institutional Security Standards Applied
-            </p>
-          </CardFooter>
         </Card>
       </div>
     </div>
