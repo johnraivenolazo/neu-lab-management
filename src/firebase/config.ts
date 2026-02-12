@@ -1,8 +1,9 @@
 export const firebaseConfig = {
-  "projectId": "studio-7815438824-82398",
-  "appId": "1:447987248019:web:4dcbed3553ade9e5671666",
-  "apiKey": "AIzaSyCsvWt1K7O-InK0BaUkXSj8oHcjhbUtWb8",
-  "authDomain": "studio-7815438824-82398.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "447987248019"
+  apiKey: "AIzaSyAcba3_j86AvVMMLDBd7C9A17z8Ok7Np8Y",
+  authDomain: "neu-lab-management.firebaseapp.com",
+  projectId: "neu-lab-management",
+  storageBucket: "neu-lab-management.firebasestorage.app",
+  messagingSenderId: "406073042645",
+  appId: "1:406073042645:web:378f3c0b40f343a6eea45c",
+  measurementId: "G-BF9SD233J7"
 };
