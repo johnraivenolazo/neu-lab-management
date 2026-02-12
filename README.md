@@ -1,4 +1,4 @@
-# Laboratory Log Management System (NEU)
+# NEU Lab Management System (NEU)
 
 Real-time web application for managing laboratory usage, tracking professor attendance, and securing lab access via QR codes. Built for New Era University.
 
