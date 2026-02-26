@@ -3,7 +3,6 @@
 A web application for tracking laboratory usage and professor attendance using QR codes.
 
 ![Admin Dashboard](public/admin_dashboard.png)
-*(Placeholder: Admin Dashboard)*
 
 ## Overview
 
