@@ -28,9 +28,12 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
-import { getAllLogs, getAllProfessors } from '@/lib/firestore-service';
+import { getAllLogs, getAllProfessors, updateUserRole } from '@/lib/firestore-service';
+import { RefreshCcw } from 'lucide-react';
 
 import type { LabLog, UserProfile } from '@/lib/types';
 
@@ -43,6 +46,8 @@ export default function AdminDashboard() {
 }
 
 function AdminContent() {
+  const router = useRouter();
+  const { toast } = useToast();
   const { user, firestore } = useFirebase();
   const [logs, setLogs] = useState<LabLog[]>([]);
   const [professors, setProfessors] = useState<UserProfile[]>([]);
@@ -69,6 +74,21 @@ function AdminContent() {
     }
     load();
   }, [firestore]);
+
+  const handleSwitchRole = async () => {
+    if (!user || !firestore) return;
+    setLoading(true);
+    try {
+      await updateUserRole(firestore, user.uid, 'professor');
+      toast({ title: 'Role Switched', description: 'Redirecting to professor view...' });
+      router.push('/professor');
+    } catch (err) {
+      console.error(err);
+      toast({ variant: 'destructive', title: 'Switch Failed' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const currentUser = {
     displayName: user?.displayName || 'Admin',
@@ -106,9 +126,19 @@ function AdminContent() {
             <h1 className="text-4xl font-bold tracking-tight text-white font-headline">The Nerve Center</h1>
             <p className="text-zinc-400 text-lg">Overview of laboratory activity and access control.</p>
           </div>
-          <div className="flex items-center gap-3 bg-zinc-900 px-5 py-3 rounded-2xl border border-zinc-800 shadow-xl">
-            <Calendar className="h-5 w-5 text-zinc-400" />
-            <span className="text-sm font-semibold text-white">{format(new Date(), 'MMMM d, yyyy')}</span>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={handleSwitchRole}
+              className="border-zinc-800 text-zinc-300 hover:bg-zinc-900 font-bold gap-2 h-12 px-6"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              Switch to Professor View
+            </Button>
+            <div className="flex items-center gap-3 bg-zinc-900 px-5 py-3 rounded-2xl border border-zinc-800 shadow-xl h-12">
+              <Calendar className="h-5 w-5 text-zinc-400" />
+              <span className="text-sm font-semibold text-white">{format(new Date(), 'MMMM d, yyyy')}</span>
+            </div>
           </div>
         </header>
 

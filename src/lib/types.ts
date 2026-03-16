@@ -1,13 +1,16 @@
 export type UserRole = 'admin' | 'professor';
+export type UserStatus = 'active' | 'blocked';
 
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
   role: UserRole;
+  status: UserStatus;
   photoURL?: string;
-  status: 'active' | 'blocked';
   employeeId?: string;
+  createdAt?: Date;
+  lastLogin?: Date;
 }
 
 export interface LabLog {

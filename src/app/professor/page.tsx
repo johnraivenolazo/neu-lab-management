@@ -7,17 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { QrCode, Mail, Loader2, CheckCircle2, MapPin, Clock, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
+import { useRouter } from 'next/navigation';
 import {
   createUsageLog,
   checkOutLog,
   getActiveSession,
   checkProfessorBlocked,
+  updateUserRole,
 } from '@/lib/firestore-service';
+import { RefreshCcw, QrCode, Mail, Loader2, CheckCircle2, MapPin, Clock, AlertTriangle } from 'lucide-react';
 import type { LabLog } from '@/lib/types';
 import dynamic from 'next/dynamic';
 
@@ -32,6 +34,7 @@ export default function ProfessorCheckIn() {
 }
 
 function ProfessorContent() {
+  const router = useRouter();
   const { user, firestore } = useFirebase();
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -155,9 +158,27 @@ function ProfessorContent() {
       <Navbar user={currentUser} />
 
       <main className="container mx-auto px-4 py-12 max-w-2xl">
-        <header className="mb-10 text-center sm:text-left">
-          <h1 className="text-4xl font-bold tracking-tight text-white font-headline mb-2">Laboratory Entry</h1>
-          <p className="text-zinc-400 text-lg">Scan the lab&apos;s QR code or enter room details manually.</p>
+        <header className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+          <div className="text-center sm:text-left">
+            <h1 className="text-4xl font-bold tracking-tight text-white font-headline mb-2">Laboratory Entry</h1>
+            <p className="text-zinc-400 text-lg">Scan the lab&apos;s QR code or enter room details manually.</p>
+          </div>
+          {user?.uid === 'jcesperanza@neu.edu.ph' || user?.email === 'jcesperanza@neu.edu.ph' ? (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={async () => {
+                if (!firestore || !user) return;
+                setLoading(true);
+                await updateUserRole(firestore, user.uid, 'admin');
+                router.push('/admin');
+              }}
+              className="border-zinc-800 text-zinc-400 hover:bg-zinc-900 gap-2"
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              Main Dashboard
+            </Button>
+          ) : null}
         </header>
 
         {activeSession ? (
