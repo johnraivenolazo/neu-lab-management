@@ -1,4 +1,4 @@
-import { Auth, signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/auth';
+import { Auth, signInWithRedirect, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
@@ -6,7 +6,7 @@ googleProvider.setCustomParameters({
     prompt: 'select_account'
 });
 
-export async function signInWithGoogle(auth: Auth, loginHint?: string): Promise<User> {
+export async function signInWithGoogle(auth: Auth, loginHint?: string): Promise<void> {
     if (loginHint) {
         googleProvider.setCustomParameters({
             hd: 'neu.edu.ph',
@@ -15,16 +15,7 @@ export async function signInWithGoogle(auth: Auth, loginHint?: string): Promise<
         });
     }
 
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-
-    // Defense-in-depth: verify domain even after Google restricts it
-    if (!user.email?.toLowerCase().endsWith('@neu.edu.ph')) {
-        await signOut(auth);
-        throw new Error('Only @neu.edu.ph institutional emails are allowed.');
-    }
-
-    return user;
+    await signInWithRedirect(auth, googleProvider);
 }
 
 export async function signOutUser(auth: Auth): Promise<void> {

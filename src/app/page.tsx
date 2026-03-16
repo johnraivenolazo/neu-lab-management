@@ -7,7 +7,7 @@ import { ShieldCheck, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/firebase/provider';
-import { signInWithGoogle } from '@/lib/auth-service';
+import { signInWithGoogle, signOutUser } from '@/lib/auth-service';
 import { checkIsAdmin, createOrUpdateProfessorProfile, ensurePrimaryAdmin } from '@/lib/firestore-service';
 import type { User } from 'firebase/auth';
 
@@ -26,6 +26,16 @@ export default function LoginPage() {
 
   const routeAfterLogin = async (fbUser: User) => {
     try {
+      if (!fbUser.email?.toLowerCase().endsWith('@neu.edu.ph')) {
+        await signOutUser(auth!);
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description: 'Only @neu.edu.ph institutional emails are allowed.',
+        });
+        return;
+      }
+
       // 1. Ensure primary admin is registered
       if (fbUser.email) {
         await ensurePrimaryAdmin(firestore!, fbUser.uid, fbUser.email);
@@ -45,14 +55,18 @@ export default function LoginPage() {
       }
     } catch (err) {
       console.error('Post-login routing error:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in Setup Failed',
+        description: 'Unable to finish account setup. Please try again.',
+      });
     }
   };
 
   const handleGoogleLogin = async (hint?: string) => {
     setLoading(true);
     try {
-      const fbUser = await signInWithGoogle(auth!, hint);
-      await routeAfterLogin(fbUser);
+      await signInWithGoogle(auth!, hint);
     } catch (err: any) {
       toast({
         variant: 'destructive',

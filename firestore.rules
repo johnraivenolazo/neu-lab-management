@@ -14,13 +14,51 @@ service cloud.firestore {
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
+
+    function isPrimaryAdminEmail() {
+      return isSignedIn() && request.auth.token.email == 'jcesperanza@neu.edu.ph';
+    }
+
+    function isAdminFromUsers() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
+    }
     
     // Checks if the user's UID exists in the 'roles_admin' collection
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isAdminFromUsers() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)));
     }
 
     // --- Collection Rules ---
+
+    // 0. Users: Primary source of truth for roles and status in current app model.
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      // Users can bootstrap their own profile. Only the known primary admin email can self-create as admin.
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.status == 'active'
+        && (
+          request.resource.data.role == 'professor'
+          || (isPrimaryAdminEmail() && request.resource.data.role == 'admin')
+        );
+
+      // Users can update personal metadata but cannot elevate role/status. Admins can manage all fields.
+      allow update: if isAdmin() || (
+        isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+      );
+
+      allow delete: if isAdmin();
+    }
 
     // 1. Professors: Can read/write their own profile. Admins can manage all.
     match /professors/{professorId} {
