@@ -15,7 +15,7 @@ import {
     deleteDoc,
 } from 'firebase/firestore';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
-import { UserProfile, UserRole, UserStatus, LabLog } from './types';
+import { UserProfile, UserRole, UserStatus, LabLog, LabRoomRecord } from './types';
 
 // ===================== HELPERS =====================
 
@@ -39,6 +39,15 @@ function logFromDoc(docSnap: QueryDocumentSnapshot<DocumentData>): LabLog {
 }
 
 const PRIMARY_ADMIN_EMAIL = 'jcesperanza@neu.edu.ph';
+
+function toRoomDocId(name: string): string {
+    const base = name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    return `room-${base || 'unnamed'}`;
+}
 
 function mapLegacyUser(
     uid: string,
@@ -312,6 +321,56 @@ export async function checkProfessorBlocked(firestore: Firestore, uid: string): 
     const legacy = await getDoc(doc(firestore, 'professors', uid));
     if (!legacy.exists()) return false;
     return !!legacy.data().isBlocked;
+}
+
+// ===================== LAB ROOM QR OPERATIONS =====================
+
+export async function getAllLabRooms(firestore: Firestore): Promise<LabRoomRecord[]> {
+    const snap = await getDocs(collection(firestore, 'lab_rooms'));
+    return snap.docs
+        .map((d) => {
+            const data = d.data();
+            return {
+                id: d.id,
+                name: data.name || d.id,
+                qrValue: data.qrValue || data.name || d.id,
+                createdAt: data.createdAt ? toDate(data.createdAt) : undefined,
+                updatedAt: data.updatedAt ? toDate(data.updatedAt) : undefined,
+            } as LabRoomRecord;
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function createLabRoom(
+    firestore: Firestore,
+    roomName: string,
+): Promise<LabRoomRecord> {
+    const normalized = roomName.trim().replace(/\s+/g, ' ');
+    if (!normalized) {
+        throw new Error('Room name is required.');
+    }
+
+    const roomId = toRoomDocId(normalized);
+    const roomRef = doc(firestore, 'lab_rooms', roomId);
+    const existing = await getDoc(roomRef);
+    if (existing.exists()) {
+        throw new Error('A room with this name already exists.');
+    }
+
+    await setDoc(roomRef, {
+        name: normalized,
+        qrValue: normalized,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    });
+
+    return {
+        id: roomId,
+        name: normalized,
+        qrValue: normalized,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
 }
 
 // ===================== LOG OPERATIONS =====================

@@ -29,3 +29,11 @@ export interface Room {
   building: string;
   qrCode?: string;
 }
+
+export interface LabRoomRecord {
+  id: string;
+  name: string;
+  qrValue: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
