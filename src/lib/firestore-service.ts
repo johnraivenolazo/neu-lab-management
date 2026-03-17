@@ -12,6 +12,7 @@ import {
     Timestamp,
     serverTimestamp,
     setDoc,
+    deleteDoc,
 } from 'firebase/firestore';
 import type { QueryDocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { UserProfile, UserRole, UserStatus, LabLog } from './types';
@@ -39,6 +40,27 @@ function logFromDoc(docSnap: QueryDocumentSnapshot<DocumentData>): LabLog {
 
 const PRIMARY_ADMIN_EMAIL = 'jcesperanza@neu.edu.ph';
 
+function mapLegacyUser(
+    uid: string,
+    data: DocumentData,
+    role: UserRole,
+): UserProfile {
+    const email = data.email || data.institutionalEmail || '';
+    const displayName = data.displayName || data.fullName || email || 'User';
+    const status: UserStatus = data.status || (data.isBlocked ? 'blocked' : 'active');
+
+    return {
+        uid,
+        email,
+        displayName,
+        role,
+        status,
+        photoURL: data.photoURL || undefined,
+        createdAt: data.createdAt ? toDate(data.createdAt) : undefined,
+        lastLogin: data.lastLogin ? toDate(data.lastLogin) : undefined,
+    };
+}
+
 // ===================== AUTH / ROLES =====================
 
 export async function checkIsAdmin(firestore: Firestore, uid: string, email?: string): Promise<boolean> {
@@ -46,40 +68,71 @@ export async function checkIsAdmin(firestore: Firestore, uid: string, email?: st
     if (profile) {
         return profile.role === 'admin';
     }
+
+    const legacyRole = await getDoc(doc(firestore, 'roles_admin', uid));
+    if (legacyRole.exists()) {
+        return true;
+    }
+
     return email === PRIMARY_ADMIN_EMAIL;
 }
 
 export async function ensurePrimaryAdmin(firestore: Firestore, uid: string, email: string): Promise<void> {
     if (email !== PRIMARY_ADMIN_EMAIL) return;
 
-    const docRef = doc(firestore, 'users', uid);
-    const snap = await getDoc(docRef);
-    
-    if (!snap.exists()) {
-        await setDoc(docRef, {
+    await Promise.all([
+        setDoc(doc(firestore, 'users', uid), {
             uid,
             email: PRIMARY_ADMIN_EMAIL,
             role: 'admin',
             status: 'active',
             createdAt: serverTimestamp(),
-            lastLogin: serverTimestamp()
-        });
-    }
+            lastLogin: serverTimestamp(),
+        }, { merge: true }),
+        setDoc(doc(firestore, 'admins', uid), {
+            id: uid,
+            institutionalEmail: PRIMARY_ADMIN_EMAIL,
+            email: PRIMARY_ADMIN_EMAIL,
+            role: 'admin',
+            status: 'active',
+            lastLogin: serverTimestamp(),
+        }, { merge: true }),
+        setDoc(doc(firestore, 'roles_admin', uid), {
+            active: true,
+            email: PRIMARY_ADMIN_EMAIL,
+            updatedAt: serverTimestamp(),
+        }, { merge: true }),
+    ]);
 }
 
 // ===================== USER OPERATIONS =====================
 
 export async function getActiveUser(firestore: Firestore, uid: string): Promise<UserProfile | null> {
-    const docRef = doc(firestore, 'users', uid);
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
-        const data = snap.data();
+    const userSnap = await getDoc(doc(firestore, 'users', uid));
+    if (userSnap.exists()) {
+        const data = userSnap.data();
         return {
             ...data,
             createdAt: data.createdAt ? toDate(data.createdAt) : undefined,
             lastLogin: data.lastLogin ? toDate(data.lastLogin) : undefined,
         } as UserProfile;
     }
+
+    const [adminSnap, professorSnap, adminRoleSnap] = await Promise.all([
+        getDoc(doc(firestore, 'admins', uid)),
+        getDoc(doc(firestore, 'professors', uid)),
+        getDoc(doc(firestore, 'roles_admin', uid)),
+    ]);
+
+    if (adminSnap.exists() || adminRoleSnap.exists()) {
+        const d = adminSnap.exists() ? adminSnap.data() : {};
+        return mapLegacyUser(uid, d, 'admin');
+    }
+
+    if (professorSnap.exists()) {
+        return mapLegacyUser(uid, professorSnap.data(), 'professor');
+    }
+
     return null;
 }
 
@@ -110,9 +163,21 @@ export async function createOrUpdateProfessorProfile(
     } else {
         await updateDoc(docRef, {
             lastLogin: serverTimestamp(),
-            ...data
+            ...data,
         });
     }
+
+    // Legacy compatibility: keep old professor profile in sync.
+    await setDoc(doc(firestore, 'professors', uid), {
+        id: uid,
+        institutionalEmail: data.email,
+        fullName: data.displayName,
+        email: data.email,
+        displayName: data.displayName,
+        photoURL: data.photoURL || '',
+        isBlocked: false,
+        lastLogin: serverTimestamp(),
+    }, { merge: true });
 }
 
 export async function getAllProfessors(firestore: Firestore): Promise<UserProfile[]> {
@@ -130,17 +195,37 @@ export async function getAllProfessors(firestore: Firestore): Promise<UserProfil
 }
 
 export async function getAllUsers(firestore: Firestore): Promise<UserProfile[]> {
-    const q = query(collection(firestore, 'users'), orderBy('email', 'asc'));
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => {
+    const [usersSnap, professorsSnap, adminsSnap] = await Promise.all([
+        getDocs(query(collection(firestore, 'users'), orderBy('email', 'asc'))),
+        getDocs(collection(firestore, 'professors')),
+        getDocs(collection(firestore, 'admins')),
+    ]);
+
+    const merged = new Map<string, UserProfile>();
+
+    usersSnap.docs.forEach((d) => {
         const data = d.data();
-        return { 
-            uid: d.id, 
+        merged.set(d.id, {
+            uid: d.id,
             ...data,
             createdAt: data.createdAt ? toDate(data.createdAt) : undefined,
             lastLogin: data.lastLogin ? toDate(data.lastLogin) : undefined,
-        } as UserProfile;
+        } as UserProfile);
     });
+
+    professorsSnap.docs.forEach((d) => {
+        if (!merged.has(d.id)) {
+            merged.set(d.id, mapLegacyUser(d.id, d.data(), 'professor'));
+        }
+    });
+
+    adminsSnap.docs.forEach((d) => {
+        if (!merged.has(d.id)) {
+            merged.set(d.id, mapLegacyUser(d.id, d.data(), 'admin'));
+        }
+    });
+
+    return Array.from(merged.values()).sort((a, b) => a.email.localeCompare(b.email));
 }
 
 export async function updateUserStatus(
@@ -148,7 +233,10 @@ export async function updateUserStatus(
     uid: string,
     status: UserStatus,
 ): Promise<void> {
-    await updateDoc(doc(firestore, 'users', uid), { status });
+    await Promise.all([
+        setDoc(doc(firestore, 'users', uid), { status }, { merge: true }),
+        setDoc(doc(firestore, 'professors', uid), { isBlocked: status === 'blocked' }, { merge: true }),
+    ]);
 }
 
 export async function updateUserRole(
@@ -156,12 +244,26 @@ export async function updateUserRole(
     uid: string,
     role: UserRole,
 ): Promise<void> {
-    await updateDoc(doc(firestore, 'users', uid), { role });
+    await setDoc(doc(firestore, 'users', uid), { role }, { merge: true });
+
+    if (role === 'admin') {
+        await setDoc(doc(firestore, 'roles_admin', uid), { active: true, updatedAt: serverTimestamp() }, { merge: true });
+    } else {
+        await deleteDoc(doc(firestore, 'roles_admin', uid)).catch(() => {
+            // Ignore not-found/no-op behavior.
+        });
+    }
 }
 
 export async function checkProfessorBlocked(firestore: Firestore, uid: string): Promise<boolean> {
     const profile = await getActiveUser(firestore, uid);
-    return profile?.status === 'blocked';
+    if (profile) {
+        return profile.status === 'blocked';
+    }
+
+    const legacy = await getDoc(doc(firestore, 'professors', uid));
+    if (!legacy.exists()) return false;
+    return !!legacy.data().isBlocked;
 }
 
 // ===================== LOG OPERATIONS =====================
