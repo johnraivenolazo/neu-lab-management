@@ -190,6 +190,7 @@ function LogsContent() {
             )}
           </CardHeader>
           <CardContent className="p-0">
+            <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-zinc-900 hover:bg-transparent">
@@ -251,6 +252,7 @@ function LogsContent() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       </main>

@@ -151,6 +151,7 @@ function AdminContent() {
               </Button>
             </CardHeader>
             <CardContent className="pt-6">
+              <div className="w-full overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-zinc-900 hover:bg-transparent">
@@ -192,6 +193,7 @@ function AdminContent() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
 

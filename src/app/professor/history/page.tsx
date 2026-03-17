@@ -82,6 +82,7 @@ function HistoryContent() {
             <CardDescription className="text-zinc-500">A detailed log of your past laboratory entries and exits.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
+            <div className="w-full overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-zinc-900 hover:bg-transparent">
@@ -142,6 +143,7 @@ function HistoryContent() {
                 )}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
 

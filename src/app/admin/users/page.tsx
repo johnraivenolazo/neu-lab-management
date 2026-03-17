@@ -139,6 +139,7 @@ function UsersContent() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
+              <div className="w-full overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-zinc-900 hover:bg-transparent">
@@ -235,6 +236,7 @@ function UsersContent() {
                   )}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </TooltipProvider>
