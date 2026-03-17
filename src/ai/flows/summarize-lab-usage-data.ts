@@ -10,6 +10,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+type UsageEntry = {
+  professor?: string;
+  room?: string;
+  timestamp?: string;
+  duration?: number;
+};
+
 const SummarizeLabUsageDataInputSchema = z.object({
   usageData: z.string().describe('A JSON string containing laboratory usage data, including professor name, room number, timestamp, and duration.'),
 });
@@ -22,6 +29,34 @@ export type SummarizeLabUsageDataOutput = z.infer<typeof SummarizeLabUsageDataOu
 
 export async function summarizeLabUsageData(input: SummarizeLabUsageDataInput): Promise<SummarizeLabUsageDataOutput> {
   return summarizeLabUsageDataFlow(input);
+}
+
+function fallbackSummaryFromUsageData(usageData: string): string {
+  let parsed: UsageEntry[] = [];
+
+  try {
+    const raw = JSON.parse(usageData);
+    parsed = Array.isArray(raw) ? raw : [];
+  } catch {
+    return 'Unable to summarize data right now. Please try again later.';
+  }
+
+  if (parsed.length === 0) {
+    return 'No usage data to summarize yet.';
+  }
+
+  const roomCounts: Record<string, number> = {};
+  const professorCounts: Record<string, number> = {};
+
+  for (const entry of parsed) {
+    if (entry.room) roomCounts[entry.room] = (roomCounts[entry.room] ?? 0) + 1;
+    if (entry.professor) professorCounts[entry.professor] = (professorCounts[entry.professor] ?? 0) + 1;
+  }
+
+  const topRoom = Object.entries(roomCounts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? 'N/A';
+  const topProfessor = Object.entries(professorCounts).sort(([, a], [, b]) => b - a)[0]?.[0] ?? 'N/A';
+
+  return `Summary unavailable from AI service right now. Based on current records: ${parsed.length} sessions logged, most active room: ${topRoom}, most frequent user: ${topProfessor}.`;
 }
 
 const summarizeLabUsageDataPrompt = ai.definePrompt({
@@ -43,14 +78,29 @@ const summarizeLabUsageDataFlow = ai.defineFlow(
     outputSchema: SummarizeLabUsageDataOutputSchema,
   },
   async input => {
+    let parsedUsage: unknown;
+
     try {
-      JSON.parse(input.usageData);
+      parsedUsage = JSON.parse(input.usageData);
     } catch (e) {
       console.error('Invalid JSON data provided:', e);
       return {summary: 'Invalid laboratory usage data provided.'};
     }
 
-    const {output} = await summarizeLabUsageDataPrompt(input);
-    return output!;
+    if (!Array.isArray(parsedUsage) || parsedUsage.length === 0) {
+      return {summary: 'No usage data to summarize yet.'};
+    }
+
+    try {
+      const {output} = await summarizeLabUsageDataPrompt(input);
+      if (!output?.summary) {
+        return {summary: fallbackSummaryFromUsageData(input.usageData)};
+      }
+
+      return output;
+    } catch (error) {
+      console.error('AI summary generation failed:', error);
+      return {summary: fallbackSummaryFromUsageData(input.usageData)};
+    }
   }
 );
