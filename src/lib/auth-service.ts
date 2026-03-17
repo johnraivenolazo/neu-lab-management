@@ -1,4 +1,4 @@
-import { Auth, signInWithRedirect, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { Auth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
@@ -14,10 +14,13 @@ export async function signInWithGoogle(auth: Auth, loginHint?: string): Promise<
     });
 
     try {
-        await signInWithRedirect(auth, googleProvider);
+        await signInWithPopup(auth, googleProvider);
         return;
     } catch (err: any) {
         const code = err?.code || '';
+        if (code === 'auth/popup-blocked') {
+            throw new Error('Popup was blocked. Please allow popups for this site and try again.');
+        }
         if (code === 'auth/unauthorized-domain') {
             throw new Error('This domain is not authorized in Firebase Auth settings.');
         }
