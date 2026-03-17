@@ -21,6 +21,7 @@ export interface LabLog {
   checkIn: Date;
   checkOut?: Date;
   duration?: number; // in minutes
+  durationSeconds?: number; // in seconds
 }
 
 export interface Room {

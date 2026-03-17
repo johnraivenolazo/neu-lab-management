@@ -35,6 +35,7 @@ function logFromDoc(docSnap: QueryDocumentSnapshot<DocumentData>): LabLog {
         checkIn: toDate(d.checkIn),
         checkOut: d.checkOut ? toDate(d.checkOut) : undefined,
         duration: d.duration ?? undefined,
+        durationSeconds: d.durationSeconds ?? undefined,
     };
 }
 
@@ -397,9 +398,10 @@ export async function checkOutLog(firestore: Firestore, logId: string): Promise<
 
     const checkIn = toDate(snap.data().checkIn);
     const now = new Date();
-    const duration = Math.round((now.getTime() - checkIn.getTime()) / 60000);
+    const durationSeconds = Math.max(0, Math.round((now.getTime() - checkIn.getTime()) / 1000));
+    const duration = Math.floor(durationSeconds / 60);
 
-    await updateDoc(ref, { checkOut: serverTimestamp(), duration });
+    await updateDoc(ref, { checkOut: serverTimestamp(), duration, durationSeconds });
 }
 
 export async function getActiveSession(firestore: Firestore, professorId: string): Promise<LabLog | null> {

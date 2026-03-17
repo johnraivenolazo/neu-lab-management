@@ -20,6 +20,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
 import { getAllLogs } from '@/lib/firestore-service';
 import type { LabLog } from '@/lib/types';
+import { formatLogDuration } from '@/lib/utils';
 
 export default function UsageLogsPage() {
   return (
@@ -90,9 +91,9 @@ function LogsContent() {
   };
 
   const handleExportCSV = () => {
-    const headers = 'Professor,Room,Check-In,Check-Out,Duration (min),Status\n';
+    const headers = 'Professor,Room,Check-In,Check-Out,Duration,Status\n';
     const rows = filteredLogs.map(log =>
-      `"${log.professorName}","${log.roomNumber}","${format(log.checkIn, 'yyyy-MM-dd HH:mm')}","${log.checkOut ? format(log.checkOut, 'yyyy-MM-dd HH:mm') : ''}","${log.duration || ''}","${log.checkOut ? 'Closed' : 'Active'}"`
+      `"${log.professorName}","${log.roomNumber}","${format(log.checkIn, 'yyyy-MM-dd HH:mm')}","${log.checkOut ? format(log.checkOut, 'yyyy-MM-dd HH:mm') : ''}","${formatLogDuration(log)}","${log.checkOut ? 'Closed' : 'Active'}"`
     ).join('\n');
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -230,7 +231,9 @@ function LogsContent() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium text-zinc-300">{log.duration ? `${log.duration} minutes` : '--'}</span>
+                      <span className="font-medium text-zinc-300">
+                        {formatLogDuration(log)}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge variant={log.checkOut ? "secondary" : "default"} className={!log.checkOut ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-zinc-800 text-zinc-400 border-zinc-700"}>

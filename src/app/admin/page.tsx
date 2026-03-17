@@ -33,6 +33,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
 import { getAllLogs, getAllProfessors } from '@/lib/firestore-service';
 import { RefreshCcw } from 'lucide-react';
+import { formatLogDuration } from '@/lib/utils';
 
 import type { LabLog, UserProfile } from '@/lib/types';
 
@@ -110,7 +111,7 @@ function AdminContent() {
       <main className="container mx-auto px-4 py-12 space-y-10">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
-            <h1 className="text-4xl font-bold tracking-tight text-white font-headline">The Nerve Center</h1>
+            <h1 className="text-4xl font-bold tracking-tight text-white font-headline">Overview</h1>
             <p className="text-zinc-400 text-lg">Overview of laboratory activity and access control.</p>
           </div>
           <div className="flex items-center gap-3">
@@ -172,7 +173,9 @@ function AdminContent() {
                             {format(log.checkIn, 'hh:mm a')}
                           </div>
                         </TableCell>
-                        <TableCell className="text-zinc-300">{log.duration ? `${log.duration} min` : '--'}</TableCell>
+                        <TableCell className="text-zinc-300">
+                          {formatLogDuration(log)}
+                        </TableCell>
                         <TableCell>
                           <Badge variant={log.checkOut ? "secondary" : "default"} className={!log.checkOut ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-zinc-800 text-zinc-400 border-zinc-700"}>
                             {log.checkOut ? "Completed" : "Active"}

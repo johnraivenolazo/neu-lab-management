@@ -11,6 +11,7 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
 import { getLogsByProfessor } from '@/lib/firestore-service';
 import type { LabLog } from '@/lib/types';
+import { formatDuration, formatLogDuration, getDurationSeconds } from '@/lib/utils';
 
 export default function ProfessorHistoryPage() {
   return (
@@ -46,6 +47,11 @@ function HistoryContent() {
     role: 'professor' as const,
     photoURL: user?.photoURL || undefined,
   };
+
+  const totalSeconds = logs.reduce((acc, log) => {
+    const seconds = getDurationSeconds(log);
+    return acc + (seconds ?? 0);
+  }, 0);
 
   if (loading) {
     return (
@@ -123,7 +129,7 @@ function HistoryContent() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium text-zinc-200">
-                        {log.duration ? `${log.duration} min` : '--'}
+                        {formatLogDuration(log)}
                       </TableCell>
                     </TableRow>
                   ))
@@ -148,9 +154,9 @@ function HistoryContent() {
           </Card>
           <Card className="bg-zinc-950 border-zinc-800">
             <CardHeader className="pb-2">
-              <CardDescription className="text-zinc-500 uppercase text-[10px] font-bold tracking-widest">Total Minutes</CardDescription>
+              <CardDescription className="text-zinc-500 uppercase text-[10px] font-bold tracking-widest">Total Time</CardDescription>
               <CardTitle className="text-3xl text-white">
-                {logs.reduce((acc, log) => acc + (log.duration || 0), 0)}
+                {formatDuration(totalSeconds)}
               </CardTitle>
             </CardHeader>
           </Card>
