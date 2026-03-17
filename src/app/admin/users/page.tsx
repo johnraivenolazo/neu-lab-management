@@ -81,10 +81,12 @@ function UsersContent() {
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    u.displayName.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search.toLowerCase().trim();
+  const filteredUsers = users.filter((u) => {
+    const displayName = (u.displayName || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return displayName.includes(normalizedSearch) || email.includes(normalizedSearch);
+  });
 
   const currentUser = {
     displayName: user?.displayName || 'Admin',
@@ -108,7 +110,7 @@ function UsersContent() {
       <main className="container mx-auto px-4 py-8 space-y-6">
         <TooltipProvider delayDuration={0}>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white font-headline">Faculty & Access Control</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white font-headline">Professor Access Control</h1>
             <p className="text-zinc-500">Manage laboratory privileges and administrative roles.</p>
           </div>
 
@@ -153,13 +155,13 @@ function UsersContent() {
                       <TableCell>
                         <Avatar>
                           <AvatarImage src={profile.photoURL} />
-                          <AvatarFallback className="bg-zinc-800 text-zinc-400">{profile.displayName.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="bg-zinc-800 text-zinc-400">{(profile.displayName || 'U').charAt(0)}</AvatarFallback>
                         </Avatar>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-zinc-100">{profile.displayName}</span>
-                          <span className="text-xs text-zinc-500">{profile.email}</span>
+                          <span className="font-semibold text-zinc-100">{profile.displayName || 'Unknown User'}</span>
+                          <span className="text-xs text-zinc-500">{profile.email || 'No email'}</span>
                         </div>
                       </TableCell>
                       <TableCell>

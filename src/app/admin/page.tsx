@@ -135,7 +135,7 @@ function AdminContent() {
           <StatCard title="Total Usage Today" value={totalUsageToday} description="Logins recorded today" icon={Activity} />
           <StatCard title="Currently Active" value={activeSessions} description="Professors in labs now" icon={DoorOpen} />
           <StatCard title="Most Active Lab" value={`Room ${mostActiveRoom}`} description="Highest traffic room" icon={DoorOpen} />
-          <StatCard title="Total Faculty" value={professors.length} description="Registered accounts" icon={Users} />
+          <StatCard title="Total Professors" value={professors.length} description="Registered accounts" icon={Users} />
         </div>
 
         <div className="grid gap-10 lg:grid-cols-3">
@@ -207,7 +207,7 @@ function AdminContent() {
                 <Button variant="outline" className="justify-start gap-3 h-14 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-zinc-200" asChild>
                   <Link href="/admin/users">
                     <Users className="h-5 w-5 text-zinc-400" />
-                    Manage Faculty Access
+                    Manage Professor Access
                     <ArrowRight className="ml-auto h-4 w-4 opacity-30" />
                   </Link>
                 </Button>

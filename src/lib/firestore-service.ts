@@ -219,7 +219,12 @@ export async function getAllUsers(firestore: Firestore): Promise<UserProfile[]> 
         const data = d.data();
         merged.set(d.id, {
             uid: d.id,
-            ...data,
+            email: data.email || data.institutionalEmail || '',
+            displayName: data.displayName || data.fullName || data.email || 'User',
+            role: data.role === 'admin' || data.role === 'professor' ? data.role : 'professor',
+            status: data.status === 'blocked' ? 'blocked' : 'active',
+            photoURL: data.photoURL || undefined,
+            employeeId: data.employeeId || undefined,
             createdAt: data.createdAt ? toDate(data.createdAt) : undefined,
             lastLogin: data.lastLogin ? toDate(data.lastLogin) : undefined,
         } as UserProfile);
@@ -237,7 +242,7 @@ export async function getAllUsers(firestore: Firestore): Promise<UserProfile[]> 
         }
     });
 
-    return Array.from(merged.values()).sort((a, b) => a.email.localeCompare(b.email));
+    return Array.from(merged.values()).sort((a, b) => (a.email || '').localeCompare(b.email || ''));
 }
 
 export async function updateUserStatus(
