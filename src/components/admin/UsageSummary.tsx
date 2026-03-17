@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { LabLog } from '@/lib/types';
 import { formatDuration, getDurationSeconds } from '@/lib/utils';
 
@@ -12,11 +11,7 @@ interface UsageSummaryProps {
 }
 
 export default function UsageSummary({ logs }: UsageSummaryProps) {
-  const [refreshTick, setRefreshTick] = useState(0);
-
   const summaryLines = useMemo(() => {
-    void refreshTick;
-
     if (logs.length === 0) {
       return ["No usage data available."];
     }
@@ -54,28 +49,17 @@ export default function UsageSummary({ logs }: UsageSummaryProps) {
       `Peak check-in hour: ${peakHour !== null ? `${peakHour.toString().padStart(2, '0')}:00-${((peakHour + 1) % 24).toString().padStart(2, '0')}:00` : 'N/A'}.`,
       `Average duration (closed sessions): ${closedLogs.length > 0 ? formatDuration(avgDurationSeconds) : 'N/A'}.`,
     ];
-  }, [logs, refreshTick]);
+  }, [logs]);
 
   return (
     <Card className="border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900/50 shadow-xl">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <BarChart3 className="h-5 w-5 text-amber-400" />
-              Usage Summary
-            </CardTitle>
-            <CardDescription className="text-zinc-500">Calculated from current usage logs</CardDescription>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setRefreshTick((prev) => prev + 1)}
-            disabled={logs.length === 0}
-            className="text-zinc-400 hover:bg-zinc-800 hover:text-white"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+        <div className="space-y-1">
+          <CardTitle className="text-lg flex items-center gap-2 text-white">
+            <BarChart3 className="h-5 w-5 text-amber-400" />
+            Usage Summary
+          </CardTitle>
+          <CardDescription className="text-zinc-500">Calculated from current usage logs</CardDescription>
         </div>
       </CardHeader>
       <CardContent>
