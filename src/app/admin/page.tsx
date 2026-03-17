@@ -29,10 +29,9 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import AuthGuard from '@/components/auth/AuthGuard';
 import { useFirebase } from '@/firebase/provider';
-import { getAllLogs, getAllProfessors, updateUserRole } from '@/lib/firestore-service';
+import { getAllLogs, getAllProfessors } from '@/lib/firestore-service';
 import { RefreshCcw } from 'lucide-react';
 
 import type { LabLog, UserProfile } from '@/lib/types';
@@ -47,7 +46,6 @@ export default function AdminDashboard() {
 
 function AdminContent() {
   const router = useRouter();
-  const { toast } = useToast();
   const { user, firestore } = useFirebase();
   const [logs, setLogs] = useState<LabLog[]>([]);
   const [professors, setProfessors] = useState<UserProfile[]>([]);
@@ -75,23 +73,8 @@ function AdminContent() {
     load();
   }, [firestore]);
 
-  const handleSwitchRole = async () => {
-    if (!user || !firestore) return;
-    setLoading(true);
-    try {
-      await updateUserRole(firestore, user.uid, 'professor', {
-        email: user.email || undefined,
-        displayName: user.displayName || undefined,
-        photoURL: user.photoURL || undefined,
-      });
-      toast({ title: 'Role Switched', description: 'Redirecting to professor view...' });
-      router.push('/professor');
-    } catch (err: any) {
-      console.error(err);
-      toast({ variant: 'destructive', title: 'Switch Failed', description: err?.message || 'Permission denied while switching role.' });
-    } finally {
-      setLoading(false);
-    }
+  const handleSwitchRole = () => {
+    router.push('/professor');
   };
 
   const currentUser = {

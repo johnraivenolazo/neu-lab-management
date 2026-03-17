@@ -17,7 +17,7 @@ import {
   checkOutLog,
   getActiveSession,
   checkProfessorBlocked,
-  updateUserRole,
+  checkIsAdmin,
 } from '@/lib/firestore-service';
 import { RefreshCcw, QrCode, Mail, Loader2, CheckCircle2, MapPin, Clock, AlertTriangle } from 'lucide-react';
 import type { LabLog } from '@/lib/types';
@@ -39,6 +39,7 @@ function ProfessorContent() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [activeSession, setActiveSession] = useState<LabLog | null>(null);
+  const [isAdminViewer, setIsAdminViewer] = useState(false);
   const { toast } = useToast();
 
   // Check for existing active session on mount
@@ -46,8 +47,12 @@ function ProfessorContent() {
     async function load() {
       if (!firestore || !user) return;
       try {
-        const session = await getActiveSession(firestore, user.uid);
+        const [session, admin] = await Promise.all([
+          getActiveSession(firestore, user.uid),
+          checkIsAdmin(firestore, user.uid, user.email || undefined),
+        ]);
         setActiveSession(session);
+        setIsAdminViewer(admin);
       } catch (err) {
         console.error('Failed to load active session:', err);
       } finally {
@@ -163,30 +168,11 @@ function ProfessorContent() {
             <h1 className="text-4xl font-bold tracking-tight text-white font-headline mb-2">Laboratory Entry</h1>
             <p className="text-zinc-400 text-lg">Scan the lab&apos;s QR code or enter room details manually.</p>
           </div>
-          {user?.uid === 'jcesperanza@neu.edu.ph' || user?.email === 'jcesperanza@neu.edu.ph' ? (
+          {isAdminViewer ? (
             <Button 
               variant="outline" 
               size="sm"
-              onClick={async () => {
-                if (!firestore || !user) return;
-                setLoading(true);
-                try {
-                  await updateUserRole(firestore, user.uid, 'admin', {
-                    email: user.email || undefined,
-                    displayName: user.displayName || undefined,
-                    photoURL: user.photoURL || undefined,
-                  });
-                  router.push('/admin');
-                } catch (err: any) {
-                  toast({
-                    variant: 'destructive',
-                    title: 'Switch Failed',
-                    description: err?.message || 'Permission denied while switching role.',
-                  });
-                } finally {
-                  setLoading(false);
-                }
-              }}
+              onClick={() => router.push('/admin')}
               className="border-zinc-800 text-zinc-400 hover:bg-zinc-900 gap-2"
             >
               <RefreshCcw className="h-3.5 w-3.5" />

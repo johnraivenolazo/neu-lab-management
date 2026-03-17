@@ -41,10 +41,6 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
                     router.replace('/professor');
                     return;
                 }
-                if (requiredRole === 'professor' && admin) {
-                    router.replace('/admin');
-                    return;
-                }
             }
 
             if (!cancelled) {
