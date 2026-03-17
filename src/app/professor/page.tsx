@@ -170,8 +170,22 @@ function ProfessorContent() {
               onClick={async () => {
                 if (!firestore || !user) return;
                 setLoading(true);
-                await updateUserRole(firestore, user.uid, 'admin');
-                router.push('/admin');
+                try {
+                  await updateUserRole(firestore, user.uid, 'admin', {
+                    email: user.email || undefined,
+                    displayName: user.displayName || undefined,
+                    photoURL: user.photoURL || undefined,
+                  });
+                  router.push('/admin');
+                } catch (err: any) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Switch Failed',
+                    description: err?.message || 'Permission denied while switching role.',
+                  });
+                } finally {
+                  setLoading(false);
+                }
               }}
               className="border-zinc-800 text-zinc-400 hover:bg-zinc-900 gap-2"
             >

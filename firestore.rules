@@ -1,12 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // --- Helper Functions ---
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
@@ -25,7 +25,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'active';
     }
-    
+
     // Checks if the user's UID exists in the 'roles_admin' collection
     function isAdmin() {
       return isAdminFromUsers() || (isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)));
@@ -38,15 +38,16 @@ service cloud.firestore {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
 
-      // Users can bootstrap their own profile. Only the known primary admin email can self-create as admin.
-      allow create: if isOwner(userId)
+      // Users can bootstrap their own profile. Admins can also create user docs for legacy migration.
+      allow create: if (isOwner(userId)
         && request.resource.data.uid == userId
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.status == 'active'
         && (
           request.resource.data.role == 'professor'
           || (isPrimaryAdminEmail() && request.resource.data.role == 'admin')
-        );
+        ))
+        || isAdmin();
 
       // Users can update personal metadata but cannot elevate role/status. Admins can manage all fields.
       allow update: if isAdmin() || (
@@ -80,16 +81,16 @@ service cloud.firestore {
       // Allow reading if you are an admin OR if you are the professor who owns the log
       allow get: if isAdmin() || (isSignedIn() && resource.data.professorId == request.auth.uid);
       allow list: if isAdmin() || (isSignedIn() && resource.data.professorId == request.auth.uid);
-      
+
       // Allow creation only for yourself
       allow create: if isSignedIn() && request.resource.data.professorId == request.auth.uid;
-      
+
       // Allow updates (e.g., check-out) if you own the log or are an admin
       allow update: if isAdmin() || (resource != null && resource.data.professorId == request.auth.uid);
-      
+
       allow delete: if isAdmin();
     }
-    
+
     // 4. Admin Profiles
     match /admins/{adminId} {
       allow get: if isOwner(adminId) || isAdmin();
@@ -100,10 +101,10 @@ service cloud.firestore {
 
     // 5. Admin Roles: The source of truth for admin permissions.
     match /roles_admin/{userId} {
-      allow get: if isSignedIn();  // Anyone can check if a role exists (needed for isAdmin check)
+      allow get: if isSignedIn();
       allow list: if isAdmin();
       allow create, update: if isAdmin() || (isOwner(userId) && isPrimaryAdminEmail());
-      allow delete: if isAdmin(); // Only existing admins can remove admins
+      allow delete: if isAdmin();
     }
   }
 }

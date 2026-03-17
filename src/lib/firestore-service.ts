@@ -233,21 +233,67 @@ export async function updateUserStatus(
     uid: string,
     status: UserStatus,
 ): Promise<void> {
-    await Promise.all([
-        setDoc(doc(firestore, 'users', uid), { status }, { merge: true }),
-        setDoc(doc(firestore, 'professors', uid), { isBlocked: status === 'blocked' }, { merge: true }),
-    ]);
+    const userRef = doc(firestore, 'users', uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+        await setDoc(userRef, { status }, { merge: true });
+    } else {
+        const legacy = await getActiveUser(firestore, uid);
+        if (legacy?.email) {
+            await setDoc(userRef, {
+                uid,
+                email: legacy.email,
+                displayName: legacy.displayName,
+                photoURL: legacy.photoURL || '',
+                role: legacy.role,
+                status,
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+            }, { merge: true });
+        }
+    }
+
+    await setDoc(doc(firestore, 'professors', uid), { isBlocked: status === 'blocked' }, { merge: true });
 }
 
 export async function updateUserRole(
     firestore: Firestore,
     uid: string,
     role: UserRole,
+    identity?: { email?: string; displayName?: string; photoURL?: string },
 ): Promise<void> {
-    await setDoc(doc(firestore, 'users', uid), { role }, { merge: true });
+    const userRef = doc(firestore, 'users', uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+        await setDoc(userRef, { role }, { merge: true });
+    } else {
+        const legacy = await getActiveUser(firestore, uid);
+        const resolvedEmail = identity?.email || legacy?.email;
+
+        if (!resolvedEmail) {
+            throw new Error('Cannot switch role for this account yet. Missing email profile in legacy records.');
+        }
+
+        await setDoc(userRef, {
+            uid,
+            email: resolvedEmail,
+            displayName: identity?.displayName || legacy?.displayName || resolvedEmail,
+            photoURL: identity?.photoURL || legacy?.photoURL || '',
+            role,
+            status: legacy?.status || 'active',
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+        }, { merge: true });
+    }
 
     if (role === 'admin') {
-        await setDoc(doc(firestore, 'roles_admin', uid), { active: true, updatedAt: serverTimestamp() }, { merge: true });
+        await setDoc(doc(firestore, 'roles_admin', uid), {
+            active: true,
+            email: identity?.email || null,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
     } else {
         await deleteDoc(doc(firestore, 'roles_admin', uid)).catch(() => {
             // Ignore not-found/no-op behavior.

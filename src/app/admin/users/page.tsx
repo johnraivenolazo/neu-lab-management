@@ -66,11 +66,15 @@ function UsersContent() {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
+  const handleRoleChange = async (profile: UserProfile, newRole: UserRole) => {
     if (!firestore) return;
     try {
-      await updateUserRole(firestore, userId, newRole);
-      setUsers(prev => prev.map(u => u.uid === userId ? { ...u, role: newRole } : u));
+      await updateUserRole(firestore, profile.uid, newRole, {
+        email: profile.email,
+        displayName: profile.displayName,
+        photoURL: profile.photoURL,
+      });
+      setUsers(prev => prev.map(u => u.uid === profile.uid ? { ...u, role: newRole } : u));
       toast({ title: 'Role Updated', description: `User role changed to ${newRole}.` });
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Failed to update role.' });
@@ -175,7 +179,7 @@ function UsersContent() {
                         ) : (
                           <Select
                             value={profile.role}
-                            onValueChange={(val) => handleRoleChange(profile.uid, val as UserRole)}
+                            onValueChange={(val) => handleRoleChange(profile, val as UserRole)}
                           >
                             <SelectTrigger className="w-32 bg-zinc-900 border-zinc-800 h-8 text-xs">
                               <SelectValue />

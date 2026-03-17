@@ -79,12 +79,16 @@ function AdminContent() {
     if (!user || !firestore) return;
     setLoading(true);
     try {
-      await updateUserRole(firestore, user.uid, 'professor');
+      await updateUserRole(firestore, user.uid, 'professor', {
+        email: user.email || undefined,
+        displayName: user.displayName || undefined,
+        photoURL: user.photoURL || undefined,
+      });
       toast({ title: 'Role Switched', description: 'Redirecting to professor view...' });
       router.push('/professor');
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast({ variant: 'destructive', title: 'Switch Failed' });
+      toast({ variant: 'destructive', title: 'Switch Failed', description: err?.message || 'Permission denied while switching role.' });
     } finally {
       setLoading(false);
     }
