@@ -105,7 +105,7 @@ function ProfessorContent() {
 
       toast({
         title: 'Access Granted',
-        description: `Thank you for using Room ${room}. Session started at ${format(new Date(), 'hh:mm a')}.`,
+        description: `Checked in to Room ${room} at ${format(new Date(), 'hh:mm a')}.`,
       });
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Check-in failed.' });
@@ -122,7 +122,7 @@ function ProfessorContent() {
       setActiveSession(null);
       toast({
         title: 'Session Ended',
-        description: 'You have successfully checked out. Have a productive day!',
+        description: 'Checked out successfully.',
       });
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Error', description: err.message || 'Check-out failed.' });
@@ -176,7 +176,7 @@ function ProfessorContent() {
               className="border-zinc-800 text-zinc-400 hover:bg-zinc-900 gap-2"
             >
               <RefreshCcw className="h-3.5 w-3.5" />
-              Main Dashboard
+              Admin Dashboard
             </Button>
           ) : null}
         </header>
@@ -274,13 +274,13 @@ function ProfessorContent() {
                       />
                     </div>
                     <Button type="submit" className="w-full h-14 text-lg font-bold bg-white text-black hover:bg-zinc-200" disabled={loading}>
-                      {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Verify Access'}
+                      {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Check In'}
                     </Button>
                   </form>
                 </CardContent>
                 <CardFooter className="bg-zinc-900/50 border-t border-zinc-800/50 py-5">
                   <p className="text-xs text-zinc-500 italic text-center w-full">
-                    Manual login is logged for security auditing purposes.
+                    Manual check-ins are recorded in usage logs.
                   </p>
                 </CardFooter>
               </Card>

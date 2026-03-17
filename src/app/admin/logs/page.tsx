@@ -120,7 +120,7 @@ function LogsContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white font-headline">Usage History</h1>
-            <p className="text-zinc-500">Comprehensive laboratory access logs and audit trails.</p>
+            <p className="text-zinc-500">Laboratory access logs with filters and export.</p>
           </div>
           <Button className="gap-2 bg-zinc-100 text-black hover:bg-zinc-200" onClick={handleExportCSV}>
             <Download className="h-4 w-4" />

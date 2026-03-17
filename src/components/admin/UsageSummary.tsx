@@ -3,22 +3,22 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { BarChart3, RefreshCw } from "lucide-react";
 import { LabLog } from '@/lib/types';
 import { formatDuration, getDurationSeconds } from '@/lib/utils';
 
-interface AIUsageSummaryProps {
+interface UsageSummaryProps {
   logs: LabLog[];
 }
 
-export default function AIUsageSummary({ logs }: AIUsageSummaryProps) {
+export default function UsageSummary({ logs }: UsageSummaryProps) {
   const [refreshTick, setRefreshTick] = useState(0);
 
   const summaryLines = useMemo(() => {
     void refreshTick;
 
     if (logs.length === 0) {
-      return ["No data available to analyze."];
+      return ["No usage data available."];
     }
 
     const closedLogs = logs.filter((log) => !!log.checkOut);
@@ -47,15 +47,13 @@ export default function AIUsageSummary({ logs }: AIUsageSummaryProps) {
     const totalDurationSeconds = closedLogs.reduce((acc, log) => acc + (getDurationSeconds(log) ?? 0), 0);
     const avgDurationSeconds = closedLogs.length > 0 ? Math.round(totalDurationSeconds / closedLogs.length) : 0;
 
-    const lines = [
-      `Total sessions recorded: ${logs.length}. Active now: ${activeLogs}.`,
-      `Most active room: ${topRoom ? `Room ${topRoom[0]} (${topRoom[1]} sessions)` : 'N/A'}.`,
-      `Most frequent user: ${topProfessor ? `${topProfessor[0]} (${topProfessor[1]} sessions)` : 'N/A'}.`,
+    return [
+      `Sessions logged: ${logs.length}. Active now: ${activeLogs}.`,
+      `Most used room: ${topRoom ? `Room ${topRoom[0]} (${topRoom[1]} sessions)` : 'N/A'}.`,
+      `Most frequent professor: ${topProfessor ? `${topProfessor[0]} (${topProfessor[1]} sessions)` : 'N/A'}.`,
       `Peak check-in hour: ${peakHour !== null ? `${peakHour.toString().padStart(2, '0')}:00-${((peakHour + 1) % 24).toString().padStart(2, '0')}:00` : 'N/A'}.`,
-      `Average closed-session duration: ${closedLogs.length > 0 ? formatDuration(avgDurationSeconds) : 'N/A'}.`,
+      `Average duration (closed sessions): ${closedLogs.length > 0 ? formatDuration(avgDurationSeconds) : 'N/A'}.`,
     ];
-
-    return lines;
   }, [logs, refreshTick]);
 
   return (
@@ -64,10 +62,10 @@ export default function AIUsageSummary({ logs }: AIUsageSummaryProps) {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2 text-white">
-              <Sparkles className="h-5 w-5 text-amber-400" />
-              Smart Lab Insights
+              <BarChart3 className="h-5 w-5 text-amber-400" />
+              Usage Summary
             </CardTitle>
-            <CardDescription className="text-zinc-500">Rule-based overview of usage trends</CardDescription>
+            <CardDescription className="text-zinc-500">Calculated from current usage logs</CardDescription>
           </div>
           <Button
             variant="ghost"

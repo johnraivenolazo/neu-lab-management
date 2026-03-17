@@ -4,6 +4,10 @@ A web application for tracking laboratory usage and professor attendance using Q
 
 ![Admin Dashboard](public/admin_dashboard.png)
 
+## Live Website
+
+- https://neu-lab-management.vercel.app/
+
 ## Overview
 
 This system replaces manual logbooks with a digital tracking solution. It allows professors to check in and out of laboratories by scanning a QR code, while administrators can monitor usage in real-time.

@@ -8,7 +8,7 @@
 - Usage Logging: Record professor's name, room number, timestamps (in/out), and duration upon successful login/scan in Firestore.
 - Admin Dashboard: Provide an admin dashboard for data visualization, filtering, and user management, accessible only via institutional email.
 - Data Visualization: Display key metrics on the admin dashboard, such as total usage today, most active lab, and number of currently active sessions. Each metric is shown as a statistic card.
-- AI Summarization: Use AI tool to provide a brief text summary of peak hours and most frequent users based on laboratory usage data. AI decides whether to output this summarization based on available data.
+- Usage Summary: Generate a deterministic text summary of peak hours, most used room, and most frequent professor from usage logs.
 - User Management: Enable admins to block/revoke laboratory access for individual professor profiles instantly via a toggle. This blocks them from logging in via QR code or email.
 
 ## Style Guidelines:

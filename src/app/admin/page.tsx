@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import StatCard from '@/components/admin/StatCard';
-import AIUsageSummary from '@/components/admin/AIUsageSummary';
+import UsageSummary from '@/components/admin/UsageSummary';
 import {
   Users,
   DoorOpen,
@@ -112,7 +112,7 @@ function AdminContent() {
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-1">
             <h1 className="text-4xl font-bold tracking-tight text-white font-headline">Overview</h1>
-            <p className="text-zinc-400 text-lg">Overview of laboratory activity and access control.</p>
+            <p className="text-zinc-400 text-lg">Laboratory activity and access status.</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -144,7 +144,7 @@ function AdminContent() {
             <CardHeader className="flex flex-row items-center justify-between pb-6 border-b border-zinc-900">
               <div className="space-y-1">
                 <CardTitle className="text-2xl text-white">Recent Activity</CardTitle>
-                <CardDescription className="text-zinc-500">Live stream of check-ins and check-outs.</CardDescription>
+                <CardDescription className="text-zinc-500">Latest check-ins and check-outs.</CardDescription>
               </div>
               <Button asChild variant="outline" size="sm" className="border-zinc-800 hover:bg-zinc-900 text-zinc-300">
                 <Link href="/admin/logs">View All Logs</Link>
@@ -195,9 +195,9 @@ function AdminContent() {
             </CardContent>
           </Card>
 
-          {/* AI Insights and Sidebar */}
+          {/* Usage Summary and Sidebar */}
           <div className="space-y-8">
-            <AIUsageSummary logs={logs} />
+            <UsageSummary logs={logs} />
 
             <Card className="shadow-2xl border-zinc-800 bg-zinc-950">
               <CardHeader>
