@@ -163,7 +163,9 @@ export async function createOrUpdateProfessorProfile(
     } else {
         await updateDoc(docRef, {
             lastLogin: serverTimestamp(),
-            ...data,
+            // Keep email immutable for self-updates per Firestore rules.
+            displayName: data.displayName,
+            photoURL: data.photoURL || '',
         });
     }
 
